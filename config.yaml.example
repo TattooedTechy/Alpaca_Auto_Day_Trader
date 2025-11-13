@@ -1,0 +1,101 @@
+# Alpaca API Credentials (Fallback)
+# It's STRONGLY recommended to use a .env file for these.
+# These values are only used if APCA_API_KEY_ID and APCA_API_SECRET_KEY are not set.
+alpaca:
+  key: "YOUR_ALPACA_KEY_ID"
+  secret: "YOUR_ALPACA_SECRET_KEY"
+
+# Trading Mode & General Settings
+mode:
+  type: "live" # 'live' or 'backtest'
+  use_paper: true # true for paper trading, false for live money
+  extended_hours: false # true to trade during extended hours
+  model_type: "logistic_regression" # 'logistic_regression' or 'random_forest'
+  symbols:
+    - "SPY"
+    - "QQQ"
+    - "AAPL"
+    - "MSFT"
+    - "GOOGL"
+
+# Model Confidence Thresholds
+thresholds:
+  confidence_threshold: 0.55 # General threshold, not used everywhere but can be a fallback
+  confidence_buy: 0.65 # Probability threshold to initiate a buy
+  confidence_sell: 0.45 # Probability threshold to initiate a sell (i.e., if P(up) < 0.45)
+
+# Risk Management Parameters
+risk:
+  # Portfolio-level risk controls
+  max_drawdown_pct: 15.0      # Halts trading if portfolio equity drops by this percentage.
+  max_position_size: 0.05     # Max size of a single position as a % of portfolio equity (e.g., 0.05 = 5%).
+  
+  # Trade-level risk controls
+  max_hold_seconds: 7200      # Maximum time to hold a position (e.g., 7200 = 2 hours).
+  min_holding_minutes: 5      # Minimum time to hold before a profit-take exit is allowed.
+  trailing_stop_pct: 2.0      # Percentage for trailing stop loss.
+  slippage_percentage: 0.001  # Expected slippage for cost estimation (0.1%).
+
+# Market Hours (UTC)
+# The bot will only trade within these hours if extended_hours is false.
+market_hours:
+  open: "13:30" # 9:30 AM EST
+  close: "20:00" # 4:00 PM EST
+
+# Fundamental Filters
+# These are applied before entering a trade. The 'default' key is used for all symbols
+# unless a symbol-specific override is provided (e.g., 'AAPL': {...}).
+fundamental_filters:
+  default:
+    eps_min: 0
+    eps_max: 100
+    pe_min: 1
+    pe_max: 100
+  # Example of a symbol-specific override
+  # TSLA:
+  #   eps_min: -10
+  #   eps_max: 50
+  #   pe_min: 10
+  #   pe_max: 200
+
+# Dynamic Risk Adjustments
+# Allows for different risk parameters based on market volatility.
+# The bot will use the 'default' settings unless volatility exceeds the threshold.
+risk_adjustments:
+  volatility_threshold: 0.02 # Volatility level to switch to 'high_vol' settings
+  by_volatility:
+    default:
+      RISK_PER_TRADE: 0.01 # Risk 1% of portfolio on a single trade
+      STOP_LOSS_PCT: 0.02 # 2% stop loss
+      TAKE_PROFIT_PCT: 0.04 # 4% take profit
+    high_vol:
+      RISK_PER_TRADE: 0.005 # Risk 0.5% in high volatility
+      STOP_LOSS_PCT: 0.03 # Wider 3% stop loss
+      TAKE_PROFIT_PCT: 0.05 # Wider 5% take profit
+
+# Retry and Concurrency Settings
+retry:
+  max_retries: 3 # Number of retries for failed API calls
+  trade_lock_timeout_seconds: 60 # How long to lock a symbol to prevent concurrent trades
+  concurrency_limit: 5 # Max number of symbols to trade concurrently.
+
+# Cache Settings
+position_cache_ttl: 60 # Time-to-live in seconds for caching historical bar data
+
+# Machine Learning Pipeline Settings
+# These parameters are used by the train.py script.
+ml_pipeline:
+  # Triple-Barrier Method parameters for labeling data
+  triple_barrier:
+    tp_mult: 1.015       # Take-profit multiplier (e.g., 1.015 = 1.5% profit)
+    sl_mult: 0.99        # Stop-loss multiplier (e.g., 0.99 = 1% loss)
+    max_hold_bars: 20    # Max number of bars to hold before timing out
+
+  # Hyperparameter tuning settings for GridSearchCV
+  hyperparameter_tuning:
+    # A smaller grid will run faster.
+    # Adjust these based on the model_type you are using.
+    param_grid:
+      n_estimators: [100, 150]
+      max_depth: [10, 15]
+      min_samples_leaf: [10, 20]

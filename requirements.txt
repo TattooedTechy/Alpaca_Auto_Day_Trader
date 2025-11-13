@@ -1,0 +1,13 @@
+alpaca-py
+cachetools
+matplotlib
+numpy
+pandas
+pydantic
+python-dotenv
+PyYAML
+scikit-learn
+tenacity
+yahoo_fin
+yfinance
+requests
